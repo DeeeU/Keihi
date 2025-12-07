@@ -4,7 +4,7 @@ import type { App } from 'vue'
 
 // GraphQL APIのエンドポイント
 const httpLink = new HttpLink({
-  uri: import.meta.env.VITE_GRAPHQL_ENDPOINT || 'http://localhost:8000/graphql',
+  uri: import.meta.env.VITE_GRAPHQL_ENDPOINT || 'http://localhost:8000/graphql/',
 })
 
 // Apollo Clientインスタンスの作成
