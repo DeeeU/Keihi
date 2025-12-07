@@ -4,11 +4,18 @@ DjangoとStrawberry GraphQLを使用した経費管理アプリケーション�
 
 ## 技術スタック
 
-- **Django 5.2+** - Pythonウェブフレームワーク
+- **Django 5.1+** - Pythonウェブフレームワーク
 - **Strawberry GraphQL** - PythonのためのGraphQLライブラリ
 - **Django CORS Headers** - CORS対応
 - **PostgreSQL / SQLite** - データベース（開発環境ではSQLite）
-- **Python 3.11+** - プログラミング言語
+- **Python 3.12+** - プログラミング言語
+
+## テスト環境
+
+- **pytest** - テストフレームワーク
+- **pytest-django** - Django統合
+- **Ruff** - Linter & Formatter
+- **mypy** - 型チェック（今後追加予定）
 
 ## プロジェクト構成
 
@@ -22,11 +29,15 @@ backend/
 ├── api/                # GraphQL API アプリケーション
 │   ├── schema.py       # GraphQLスキーマ定義
 │   ├── models.py       # データモデル
+│   ├── tests.py        # アプリケーションテスト
 │   └── migrations/     # データベースマイグレーション
+├── tests/              # 統合テスト
+│   ├── conftest.py     # pytestフィクスチャ
+│   └── test_example.py # サンプルテスト
 ├── manage.py           # Django管理コマンド
+├── pytest.ini          # pytest設定
 ├── requirements.txt    # 本番環境依存関係
-├── requirements-dev.txt # 開発環境依存関係
-└── pyproject.toml      # プロジェクトメタデータ
+└── requirements-dev.txt # 開発環境依存関係
 ```
 
 ## セットアップ
@@ -117,22 +128,22 @@ pytest
 
 ## コード品質
 
-### フォーマット
-
-```bash
-black .
-```
-
-### リント
+### Ruffによるリント
 
 ```bash
 ruff check .
 ```
 
-### 型チェック
+### Ruffによるフォーマット
 
 ```bash
-mypy .
+ruff format .
+```
+
+### 型チェック（今後追加予定）
+
+```bash
+# mypy .
 ```
 
 ## API設計

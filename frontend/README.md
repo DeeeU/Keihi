@@ -10,6 +10,7 @@ KeiHiプロジェクトのフロントエンドアプリケーションです。
 - **ルーティング**: Vue Router
 - **状態管理**: Pinia
 - **GraphQL Client**: Apollo Client (@vue/apollo-composable)
+- **テスト**: Vitest + @vue/test-utils
 - **コード品質**: ESLint + Prettier
 
 ## プロジェクト構成
@@ -19,14 +20,19 @@ frontend/
 ├── src/
 │   ├── assets/          # 静的アセット（CSS、画像など）
 │   ├── components/      # Vueコンポーネント
+│   │   └── __tests__/   # コンポーネントテスト
 │   ├── router/          # Vue Routerの設定
 │   ├── stores/          # Piniaストア（状態管理）
 │   ├── views/           # ページコンポーネント
+│   ├── __tests__/       # ユニットテスト
 │   ├── apollo.ts        # Apollo Client設定
 │   ├── App.vue          # ルートコンポーネント
 │   └── main.ts          # アプリケーションエントリーポイント
+├── tests/               # 統合・E2Eテスト用
+│   └── example.test.js  # サンプルテスト
 ├── public/              # パブリックアセット
 ├── .env.example         # 環境変数のサンプル
+├── vitest.config.ts     # Vitest設定
 └── vite.config.ts       # Vite設定
 ```
 
@@ -76,6 +82,15 @@ npm run dev
 
 # 型チェック
 npm run type-check
+
+# テストの実行
+npm run test
+
+# Watchモードでテスト
+npm run test:watch
+
+# UIモードでテスト
+npm run test:ui
 
 # プロダクションビルド
 npm run build
