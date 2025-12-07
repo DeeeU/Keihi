@@ -183,6 +183,118 @@ npm run format
 ### バッジステータス
 ![CI/CD](https://github.com/DeeeU/Keihi/workflows/CI/CD%20Pipeline/badge.svg)
 
+## 開発ワークフロー自動化（Claude Code Hooks）
+
+このプロジェクトでは、Claude Code の hooks 機能を使用して、開発ワークフローを自動化しています。
+
+### コミット前の自動Linter実行
+
+**目的**: コードの品質を保ち、Linterエラーを早期に検出
+
+**動作**:
+- Claudeが `git commit` を実行する前に自動的にLinterを実行
+- 変更されたファイルを検出し、該当する側のLinterのみを実行
+- Linterエラーがある場合はコミットをブロック
+
+**対象**:
+- **Backend**: `ruff check` + `ruff format`
+- **Frontend**: `npm run type-check` + `npm run lint` + `npm run format`
+
+**設定ファイル**:
+- `.claude/hooks/pre_commit_lint.py` - Pre-commit hook スクリプト
+- `.claude/settings.json` の `PreToolUse` hook
+
+### PR作成前の自動テスト実行
+
+**目的**: すべてのテストが通過していることを確認してからPRを作成
+
+**動作**:
+- ユーザーが「PR作成」などのキーワードを入力すると自動検出
+- 変更されたファイルに応じて適切なテストを実行するよう促す
+- CI/CDパイプラインの確認も促す
+
+**対象**:
+- **Backend**: pytest によるユニットテスト
+- **Frontend**: Vitest によるユニットテスト
+
+**設定ファイル**:
+- `.claude/hooks/pr_pre_check.py` - PR作成前チェックスクリプト
+- `.claude/settings.json` の `UserPromptSubmit` hook
+
+### カスタムスラッシュコマンド
+
+#### `/create-pr`
+
+PR作成前に必要なすべてのチェックを自動的に実行します。
+
+```
+/create-pr
+```
+
+**実行内容**:
+1. 変更ファイルの確認（`git diff`）
+2. backend/frontendの変更検出
+3. 該当するテストの実行（backend-tester/frontend-tester agent）
+4. CI/CD確認
+5. PR作成
+
+### Claude Code Agent の役割分担
+
+#### backend-tester
+- **役割**: pytest テスト実行専門
+- **Linter**: pre-commit hook で自動実行済みのため、テストのみに集中
+
+#### frontend-tester
+- **役割**: Vitest テスト実行専門
+- **Linter**: pre-commit hook で自動実行済みのため、テストのみに集中
+
+### ワークフロー図
+
+```
+コード変更
+   ↓
+コミット実行（Claudeが実行）
+   ↓
+[PreToolUse Hook] ← Linter自動実行
+   ├─ Backend: ruff check + format
+   └─ Frontend: type-check + lint + format
+   ↓
+Linter成功 → コミット完了
+Linterエラー → コミットブロック（修正が必要）
+   ↓
+PR作成依頼
+   ↓
+[UserPromptSubmit Hook] ← テスト実行を促す
+   ├─ Backend: backend-tester agent
+   └─ Frontend: frontend-tester agent
+   ↓
+テスト + CI/CD確認
+   ↓
+PR作成
+```
+
+### 設定ファイル一覧
+
+```
+.claude/
+├── settings.json              # Hooks設定
+├── hooks/
+│   ├── pre_commit_lint.py    # コミット前Linter
+│   └── pr_pre_check.py       # PR作成前チェック
+├── commands/
+│   └── create-pr.md          # カスタムコマンド
+└── agents/
+    ├── backend-tester.md     # バックエンドテスト専門
+    └── frontend-tester.md    # フロントエンドテスト専門
+```
+
+### メリット
+
+1. **早期エラー検出**: コミット時にLinterエラーを検出し、早期に修正
+2. **品質保証**: PR作成前にすべてのテストが実行され、品質を保証
+3. **自動化**: 手動でのLinter/テスト実行を忘れることがない
+4. **効率化**: 役割分担により、各段階で必要なチェックのみを実行
+
 ## ライセンス
 
 _ライセンス情報は後日追加予定_

@@ -1,0 +1,39 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout:*)",
+      "Bash(mkdir:*)",
+      "Bash(python3:*)",
+      "Bash(pip install:*)",
+      "Bash(cd backend && pytest:*)",
+      "Bash(cd frontend && npm run test:*)",
+      "Bash(cd frontend && npm run lint:*)",
+      "Bash(cd backend && ruff:*)"
+    ],
+    "deny": [],
+    "ask": []
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash(git commit:*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 '$CLAUDE_PROJECT_DIR/.claude/hooks/pre_commit_lint.py'"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 '$CLAUDE_PROJECT_DIR/.claude/hooks/pr_pre_check.py'"
+          }
+        ]
+      }
+    ]
+  }
+}
