@@ -23,17 +23,32 @@ class Category(models.Model):
         return self.name
 
 
+class PaymentMethod(models.Model):
+    """支払い方法モデル"""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=50, verbose_name="支払い方法名")
+    code = models.CharField(max_length=20, unique=True, verbose_name="コード")
+    icon = models.CharField(max_length=50, blank=True, verbose_name="アイコン")
+    is_active = models.BooleanField(default=True, verbose_name="有効")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="作成日時")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新日時")
+
+    class Meta:
+        verbose_name = "支払い方法"
+        verbose_name_plural = "支払い方法"
+        ordering = ["code"]
+        indexes = [
+            models.Index(fields=["name"]),
+            models.Index(fields=["is_active"]),
+        ]
+
+    def __str__(self):
+        return self.name
+
+
 class Expense(models.Model):
     """経費モデル"""
-
-    PAYMENT_METHOD_CHOICES = [
-        ("cash", "現金"),
-        ("credit_card", "クレジットカード"),
-        ("debit_card", "デビットカード"),
-        ("electronic_money", "電子マネー"),
-        ("bank_transfer", "銀行振込"),
-        ("other", "その他"),
-    ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     date = models.DateField(verbose_name="日付")
@@ -43,13 +58,18 @@ class Expense(models.Model):
         validators=[MinValueValidator(Decimal("0.01"))],
         verbose_name="金額",
     )
+    payment = models.ForeignKey(
+        PaymentMethod,
+        on_delete=models.PROTECT,
+        related_name="expenses",
+        null=True,
+        blank=True,
+        verbose_name="支払い方法",
+    )
     category = models.ForeignKey(
         Category, on_delete=models.PROTECT, related_name="expenses", verbose_name="カテゴリー"
     )
     description = models.TextField(verbose_name="説明")
-    payment_method = models.CharField(
-        max_length=20, choices=PAYMENT_METHOD_CHOICES, default="cash", verbose_name="支払い方法"
-    )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="作成日時")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="更新日時")
 
