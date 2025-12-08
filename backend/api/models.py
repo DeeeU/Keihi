@@ -64,3 +64,19 @@ class Expense(models.Model):
 
     def __str__(self):
         return f"{self.date} - {self.category.name} - ¥{self.amount}"
+
+class Receipt(models.Model):
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, verbose_name="ID")
+    file_name = models.CharField(max_length=255, verbose_name="領収書名")
+    file_path = models.CharField(max_length=500, verbose_name="ファイルパス")
+    file_size = models.IntegerField(validators=[MinValueValidator(0)], verbose_name="ファイルサイズ")
+    uploaded_at = models.DateTimeField(auto_now=True, verbose_name="アップロード日時")
+
+    class Meta:
+        verbose_name = "領収書"
+        verbose_name_plural = "領収書"
+        ordering = ["-uploaded_at"]
+
+    def __str__(self):
+        return self.file_name
