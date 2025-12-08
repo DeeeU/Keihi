@@ -65,18 +65,31 @@ class Expense(models.Model):
     def __str__(self):
         return f"{self.date} - {self.category.name} - ¥{self.amount}"
 
-class Receipt(models.Model):
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, verbose_name="ID")
-    file_name = models.CharField(max_length=255, verbose_name="領収書名")
+class Receipt(models.Model):
+    """領収書モデル"""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    expense = models.OneToOneField(
+        Expense,
+        on_delete=models.CASCADE,
+        related_name="receipt",
+        null=True,
+        blank=True,
+        verbose_name="経費",
+    )
+    file_name = models.CharField(max_length=255, verbose_name="ファイル名")
     file_path = models.CharField(max_length=500, verbose_name="ファイルパス")
-    file_size = models.IntegerField(validators=[MinValueValidator(0)], verbose_name="ファイルサイズ")
-    uploaded_at = models.DateTimeField(auto_now=True, verbose_name="アップロード日時")
+    file_size = models.IntegerField(
+        validators=[MinValueValidator(0)], verbose_name="ファイルサイズ"
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="作成日時")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新日時")
 
     class Meta:
         verbose_name = "領収書"
         verbose_name_plural = "領収書"
-        ordering = ["-uploaded_at"]
+        ordering = ["-created_at"]
 
     def __str__(self):
         return self.file_name
