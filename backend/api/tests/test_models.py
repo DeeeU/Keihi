@@ -1,7 +1,7 @@
 import pytest
 from decimal import Decimal
 from datetime import date
-from api.models import Category, Expense, Receipt
+from api.models import Category, Expense, Receipt, PaymentMethod
 
 
 @pytest.mark.django_db
@@ -171,3 +171,85 @@ class TestReceiptModel:
 
         # Receiptも削除されていることを確認
         assert not Receipt.objects.filter(id=receipt_id).exists()
+
+
+@pytest.mark.django_db
+class TestPaymentMethodModel:
+    def test_create_payment_method(self):
+        """PaymentMethodを作成できることをテスト"""
+        payment_method = PaymentMethod.objects.create(
+            name="クレジットカード",
+            code="credit_card",
+            icon="💳",
+        )
+
+        assert payment_method.id is not None
+        assert payment_method.name == "クレジットカード"
+        assert payment_method.code == "credit_card"
+        assert payment_method.icon == "💳"
+        assert payment_method.is_active is True
+        assert payment_method.created_at is not None
+        assert payment_method.updated_at is not None
+
+    def test_payment_method_str(self):
+        """__str__メソッドが正しく名前を返すことをテスト"""
+        payment_method = PaymentMethod.objects.create(
+            name="現金",
+            code="cash",
+        )
+
+        assert str(payment_method) == "現金"
+
+    def test_payment_method_unique_code(self):
+        """codeフィールドがuniqueであることをテスト"""
+        PaymentMethod.objects.create(
+            name="クレジットカード",
+            code="credit_card",
+        )
+
+        with pytest.raises(Exception):
+            PaymentMethod.objects.create(
+                name="別のクレジットカード",
+                code="credit_card",
+            )
+
+    def test_payment_method_expense_relation(self):
+        """ExpenseとのForeignKey関係をテスト"""
+        category = Category.objects.create(name="交通費")
+
+        payment_method = PaymentMethod.objects.create(
+            name="Suica",
+            code="suica",
+        )
+
+        expense = Expense.objects.create(
+            date=date(2024, 12, 7),
+            amount=Decimal("1500.00"),
+            category=category,
+            description="新宿駅から渋谷駅までの電車代",
+            payment=payment_method,
+        )
+
+        assert expense.payment == payment_method
+        assert payment_method.expenses.count() == 1
+        assert payment_method.expenses.first() == expense
+
+    def test_payment_method_protect(self):
+        """PaymentMethodに紐づくExpenseがある場合、PaymentMethodを削除できないことをテスト（PROTECT）"""
+        category = Category.objects.create(name="交通費")
+
+        payment_method = PaymentMethod.objects.create(
+            name="現金",
+            code="cash",
+        )
+
+        Expense.objects.create(
+            date=date(2024, 12, 7),
+            amount=Decimal("1500.00"),
+            category=category,
+            description="電車代",
+            payment=payment_method,
+        )
+
+        with pytest.raises(Exception):  # ProtectedError
+            payment_method.delete()
