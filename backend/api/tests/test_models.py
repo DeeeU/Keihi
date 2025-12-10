@@ -1,7 +1,7 @@
 import pytest
 from decimal import Decimal
 from datetime import date
-from api.models import Category, Expense
+from api.models import Category, Expense, Receipt
 
 
 @pytest.mark.django_db
@@ -42,7 +42,6 @@ class TestExpenseModel:
             amount=Decimal("1500.00"),
             category=category,
             description="新宿駅から渋谷駅までの電車代",
-            payment_method="electronic_money",
         )
 
         assert expense.id is not None
@@ -50,7 +49,6 @@ class TestExpenseModel:
         assert expense.amount == Decimal("1500.00")
         assert expense.category == category
         assert expense.description == "新宿駅から渋谷駅までの電車代"
-        assert expense.payment_method == "electronic_money"
         assert expense.created_at is not None
         assert expense.updated_at is not None
 
@@ -62,7 +60,6 @@ class TestExpenseModel:
             amount=Decimal("1500.00"),
             category=category,
             description="電車代",
-            payment_method="cash",
         )
         assert str(expense) == "2024-12-07 - 交通費 - ¥1500.00"
 
@@ -74,14 +71,12 @@ class TestExpenseModel:
             amount=Decimal("1000.00"),
             category=category,
             description="テスト1",
-            payment_method="cash",
         )
         expense2 = Expense.objects.create(
             date=date(2024, 12, 7),
             amount=Decimal("2000.00"),
             category=category,
             description="テスト2",
-            payment_method="cash",
         )
 
         expenses = list(Expense.objects.all())
@@ -96,8 +91,83 @@ class TestExpenseModel:
             amount=Decimal("1500.00"),
             category=category,
             description="電車代",
-            payment_method="cash",
         )
 
         with pytest.raises(Exception):  # ProtectedError
             category.delete()
+
+
+@pytest.mark.django_db
+class TestReceiptModel:
+    def test_create_receipt(self):
+        """領収書を作成できることをテスト"""
+        receipt = Receipt.objects.create(
+            file_name="test.jpg", file_path="./home/test", file_size=1000
+        )
+        assert receipt.id is not None
+        assert receipt.expense is None
+        assert receipt.file_name == "test.jpg"
+        assert receipt.file_path == "./home/test"
+        assert receipt.file_size == 1000
+
+    def test_receipt_str(self):
+        """領収書の__str__メソッドをテスト"""
+        receipt = Receipt.objects.create(
+            file_name="test_file_name.jpg", file_path="./home/test", file_size=1000
+        )
+        assert str(receipt) == "test_file_name.jpg"
+
+    def test_receipt_expense_relation(self):
+        """領収書とExpenseのOneToOne関係をテスト"""
+        category = Category.objects.create(name="交通費")
+
+        expense = Expense.objects.create(
+            date=date(2024, 12, 7),
+            amount=Decimal("1500.00"),
+            category=category,
+            description="新宿駅から渋谷駅までの電車代",
+        )
+
+        receipt = Receipt.objects.create(
+            expense=expense,
+            file_name="test_file_name.jpg",
+            file_path="./home/test",
+            file_size=1000,
+        )
+
+        assert receipt.expense == expense
+
+        # 同じExpenseに対して2つ目のReceiptは作成できない
+        with pytest.raises(Exception):
+            Receipt.objects.create(
+                expense=expense,
+                file_name="duplicate.jpg",
+                file_path="./home/duplicate",
+                file_size=500,
+            )
+
+    def test_receipt_cascade_delete(self):
+        """Expenseを削除するとReceiptも削除されることをテスト（CASCADE）"""
+        category = Category.objects.create(name="交通費")
+
+        expense = Expense.objects.create(
+            date=date(2024, 12, 7),
+            amount=Decimal("1500.00"),
+            category=category,
+            description="新宿駅から渋谷駅までの電車代",
+        )
+
+        receipt = Receipt.objects.create(
+            expense=expense,
+            file_name="test_file_name.jpg",
+            file_path="./home/test",
+            file_size=1000,
+        )
+
+        receipt_id = receipt.id
+
+        # Expenseを削除
+        expense.delete()
+
+        # Receiptも削除されていることを確認
+        assert not Receipt.objects.filter(id=receipt_id).exists()
