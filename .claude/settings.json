@@ -20,7 +20,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 '$CLAUDE_PROJECT_DIR/.claude/hooks/pre_commit_lint.py'"
+            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/pre_commit_lint.py"
           }
         ]
       }
@@ -30,7 +30,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 '$CLAUDE_PROJECT_DIR/.claude/hooks/pr_pre_check.py'"
+            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/pr_pre_check.py"
           }
         ]
       }
